@@ -1,26 +1,31 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { useGetMeQuery } from '@/store/api';
-import { setUser } from '@/store/authSlice';
-import { useDispatch } from 'react-redux';
+import { setUser, logout } from '@/store/authSlice';
 import { Skeleton } from './ui/skeleton';
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const dispatch = useDispatch();
-  const { isAuthenticated, token } = useSelector((state: RootState) => state.auth);
-  
+  const { isAuthenticated, token, user } = useSelector((state: RootState) => state.auth);
+
   const { data: meData, isLoading, isError } = useGetMeQuery(undefined, {
-    skip: !isAuthenticated,
+    skip: !isAuthenticated || !token,
   });
 
   useEffect(() => {
-    if (!isAuthenticated || !token || isError) {
+    if (isError) {
+      dispatch(logout());
+    }
+  }, [isError, dispatch]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
       setLocation('/login');
     }
-  }, [isAuthenticated, token, isError, setLocation]);
+  }, [isAuthenticated, token, setLocation]);
 
   useEffect(() => {
     if (meData?.user) {
@@ -28,7 +33,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     }
   }, [meData, dispatch]);
 
-  if (isLoading || !meData) {
+  if (!isAuthenticated || !token) {
+    return null;
+  }
+
+  if (!user || isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="space-y-4 text-center flex flex-col items-center">

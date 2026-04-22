@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLoginMutation } from '@/store/api';
+import { api, useLoginMutation } from '@/store/api';
 import { setCredentials } from '@/store/authSlice';
 import { RootState } from '@/store';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const result = await login({ email, password }).unwrap();
+      dispatch(api.util.resetApiState());
       dispatch(setCredentials({ token: result.token, user: result.user }));
       setLocation('/');
     } catch (err) {

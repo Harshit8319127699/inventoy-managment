@@ -2,6 +2,7 @@ import { useLocation } from 'wouter';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { logout } from '@/store/authSlice';
+import { api } from '@/store/api';
 import { LayoutDashboard, Package, Activity, LogOut, PackageOpen } from 'lucide-react';
 import { 
   SidebarProvider, 
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(api.util.resetApiState());
     setLocation('/login');
   };
 
