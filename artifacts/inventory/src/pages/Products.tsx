@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { MoreHorizontal, Plus, Search, FilterX, Eye, Edit, Trash2, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -35,7 +36,7 @@ export default function Products() {
   const [category, setCategory] = useState<string>('_all');
   const [lowStock, setLowStock] = useState(false);
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState('name_asc');
+  const [sort, setSort] = useState('name');
   
   const { data: categoriesData } = useGetCategoriesQuery(undefined);
   const { data: productsData, isLoading, isFetching } = useGetProductsQuery({
@@ -55,7 +56,7 @@ export default function Products() {
         await deleteProduct(id).unwrap();
         toast.success(`Deleted ${name}`);
       } catch (err: any) {
-        toast.error(err.data?.message || 'Failed to delete product');
+        toast.error(getApiErrorMessage(err, 'Failed to delete product'));
       }
     }
   };
@@ -65,7 +66,7 @@ export default function Products() {
     setCategory('_all');
     setLowStock(false);
     setPage(1);
-    setSort('name_asc');
+    setSort('name');
   };
 
   const formatCurrency = (value: number) => {
@@ -123,12 +124,12 @@ export default function Products() {
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="name_desc">Name (Z-A)</SelectItem>
-                    <SelectItem value="price_asc">Price (Low to High)</SelectItem>
-                    <SelectItem value="price_desc">Price (High to Low)</SelectItem>
-                    <SelectItem value="quantity_asc">Stock (Low to High)</SelectItem>
-                    <SelectItem value="quantity_desc">Stock (High to Low)</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                    <SelectItem value="-name">Name (Z-A)</SelectItem>
+                    <SelectItem value="price">Price (Low to High)</SelectItem>
+                    <SelectItem value="-price">Price (High to Low)</SelectItem>
+                    <SelectItem value="quantity">Stock (Low to High)</SelectItem>
+                    <SelectItem value="-quantity">Stock (High to Low)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Edit, ArrowUpDown, Trash2, ArrowUpRight, ArrowDownRight, Package, AlertTriangle, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 export default function ProductDetail() {
   const [location, setLocation] = useLocation();
@@ -50,7 +51,7 @@ export default function ProductDetail() {
         toast.success(`Deleted ${product.name}`);
         setLocation('/products');
       } catch (err: any) {
-        toast.error(err.data?.message || 'Failed to delete product');
+        toast.error(getApiErrorMessage(err, 'Failed to delete product'));
       }
     }
   };
@@ -217,7 +218,7 @@ function AdjustStockDialog({ product, open, onOpenChange }: { product: any, open
       setQuantity('1');
       setNote('');
     } catch (err: any) {
-      toast.error(err.data?.message || 'Failed to record movement.');
+      toast.error(getApiErrorMessage(err, 'Failed to record movement.'));
     }
   };
 
@@ -258,7 +259,7 @@ function AdjustStockDialog({ product, open, onOpenChange }: { product: any, open
           
           {type === 'OUT' && parseInt(quantity, 10) > product.quantity && (
             <div className="text-sm text-destructive font-medium bg-destructive/10 p-2 rounded border border-destructive/20">
-              Warning: This will result in negative stock. Ensure the quantity is correct.
+              This adjustment exceeds current stock and will be rejected.
             </div>
           )}
 

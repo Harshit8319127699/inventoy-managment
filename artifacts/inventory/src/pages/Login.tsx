@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { PackageOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -71,7 +72,7 @@ export default function Login() {
                 <Alert variant="destructive" className="bg-destructive/10 text-destructive border-none">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {(error as any)?.data?.message || 'Invalid email or password. Please try again.'}
+                    {getApiErrorMessage(error, 'Invalid email or password. Please try again.')}
                   </AlertDescription>
                 </Alert>
               )}

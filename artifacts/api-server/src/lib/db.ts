@@ -5,8 +5,14 @@ let memoryServerUri: string | null = null;
 
 export async function connectDb(): Promise<string> {
   let uri = process.env["MONGODB_URI"];
+  const isProduction = process.env["NODE_ENV"] === "production";
 
   if (!uri) {
+    if (isProduction) {
+      throw new Error(
+        "MONGODB_URI must be set in production. Refusing to start with in-memory MongoDB.",
+      );
+    }
     logger.warn(
       "MONGODB_URI not set — starting an embedded in-memory MongoDB. Data will reset on restart. Set MONGODB_URI for persistent storage.",
     );

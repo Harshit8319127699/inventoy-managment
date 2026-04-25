@@ -24,6 +24,22 @@ const productInput = z.object({
 
 const productUpdate = productInput.partial();
 
+const sortAliases = {
+  name_asc: "name",
+  name_desc: "-name",
+  quantity_asc: "quantity",
+  quantity_desc: "-quantity",
+  price_asc: "price",
+  price_desc: "-price",
+  created_at_asc: "createdAt",
+  created_at_desc: "-createdAt",
+} as const;
+
+const sortValue = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  return sortAliases[value as keyof typeof sortAliases] ?? value;
+}, z.enum(["name", "-name", "quantity", "-quantity", "price", "-price", "createdAt", "-createdAt"]));
+
 const listQuery = z.object({
   search: z.string().optional(),
   category: z.string().optional(),
@@ -32,7 +48,7 @@ const listQuery = z.object({
     .optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
-  sort: z.enum(["name", "-name", "quantity", "-quantity", "price", "-price", "createdAt", "-createdAt"]).default("-createdAt"),
+  sort: sortValue.default("-createdAt"),
 });
 
 function serialize(p: {

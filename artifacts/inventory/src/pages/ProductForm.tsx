@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { RequireRole } from '@/components/RequireRole';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -77,7 +78,7 @@ export default function ProductForm() {
         setLocation(`/products/${params.id}`);
       }
     } catch (err: any) {
-      toast.error(err.data?.message || 'Failed to save product');
+      toast.error(getApiErrorMessage(err, 'Failed to save product'));
       if (err.data?.errors) {
         err.data.errors.forEach((e: any) => {
           form.setError(e.path as any, { message: e.message });

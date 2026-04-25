@@ -82,39 +82,54 @@ router.get("/", async (req, res, next) => {
 });
 
 router.post("/", requireRole("admin"), async (req, res, next) => {
+  const session = await mongoose.startSession();
   try {
     const body = createSchema.parse(req.body);
     if (!mongoose.isValidObjectId(body.productId)) {
       throw new HttpError(400, "Invalid productId");
     }
-    const product = await Product.findById(body.productId);
-    if (!product) throw new HttpError(404, "Product not found");
 
-    const delta = body.type === "IN" ? body.quantity : -body.quantity;
-    const newQty = product.quantity + delta;
-    if (newQty < 0) {
-      throw new HttpError(
-        400,
-        `Insufficient stock. Current quantity is ${product.quantity}, cannot remove ${body.quantity}.`,
+    let movementId: mongoose.Types.ObjectId | null = null;
+    await session.withTransaction(async () => {
+      const query =
+        body.type === "IN"
+          ? { _id: body.productId }
+          : { _id: body.productId, quantity: { $gte: body.quantity } };
+      const update = { $inc: { quantity: body.type === "IN" ? body.quantity : -body.quantity } };
+
+      const product = await Product.findOneAndUpdate(query, update, { new: true, session });
+      if (!product) {
+        const exists = await Product.exists({ _id: body.productId }).session(session);
+        if (!exists) throw new HttpError(404, "Product not found");
+        throw new HttpError(400, "Insufficient stock for this movement");
+      }
+
+      const [movement] = await Movement.create(
+        [
+          {
+            product: product._id,
+            type: body.type,
+            quantity: body.quantity,
+            note: body.note,
+            user: req.user!.sub,
+          },
+        ],
+        { session },
       );
-    }
-
-    product.quantity = newQty;
-    await product.save();
-
-    const m = await Movement.create({
-      product: product._id,
-      type: body.type,
-      quantity: body.quantity,
-      note: body.note,
-      user: req.user!.sub,
+      movementId = movement?._id ?? null;
     });
-    const populated = await Movement.findById(m._id)
+
+    const populated = movementId
+      ? await Movement.findById(movementId)
       .populate("product", "name sku")
-      .lean();
+      .lean()
+      : null;
+    if (!populated) throw new HttpError(500, "Movement created but could not be loaded");
     res.status(201).json(serialize(populated!));
   } catch (err) {
     next(err);
+  } finally {
+    await session.endSession();
   }
 });
 
