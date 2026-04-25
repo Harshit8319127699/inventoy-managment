@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 
 export const rtkQueryErrorLogger: Middleware = (api) => (next) => (action) => {
   if (isRejectedWithValue(action)) {
-    if (action.payload?.status === 401) {
+    const payload = action.payload as { status?: number } | undefined;
+    if (payload?.status === 401) {
       api.dispatch(logout());
       toast.error('Session expired. Please log in again.');
     }
